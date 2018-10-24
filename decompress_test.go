@@ -134,7 +134,7 @@ var xp3 = `fQIlAoeHCAAAAAiAeIAAAAAIAAAIBgAAAAAAZnh3B4gAAHaFcHB3AGdwaHcHZwYHAICAA
 var xp4 = `9QTXApeYCQCQAAmQCQAAAAAJAAAIBgAAAAAAZWZmCJd4AIaVcHeXAHmQeIcHVweXAJCQAFB3V3hZiGZWB2ZlCHAJAAAAAAAAAAAAkAAAAAAAAAAAAJAAAACAAJAAAJAAAJAAkAAACAAAAAAAAAkAAAAAAACQAAAAkAAAkAAAAAAAAAAACZkAAAAJAAAAAAAAAAAAAHgAAAAAAAAAlwB4AAAAAABnB5cACQkAkHYIlgAJkAmQhpcHiZAJAGCGiACQAJgAcJcJgAAAmQiABwgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADqjdnMPD3R2N65ZV7Ps2bp6kY6+G5+Q/9OYlO/yV/w0Xfsv67Pr/Hipa1TU4k25jTQ1iRBtAIG4c/xQtCLTZYLzqgzU6JBDOuY5I0ziw95k6fUydwwe2VFkbNOgCMbRq7JCCXBmcMijIACHaCcgsS6WpiYrrLaNLJZvmWWJdds63Ed3LfqOE8u4pjwOiKvpzRphe2Ss65YIc1bBDuAshJmlaMa59qzdIpU1al2d42ACFlTohsw99FOuPRrjncb7JRdP64xBtz6yoDekakDyqZpZi1wkXt3JO3piPtPiRThd/sp2pohOI50HwObsB21su9QISwJ941OxphZBZGxItqhLya8MmP5rgObm6/72sR7/7xdno2S50PTuuOvgb70rYj+p/gU3Fi4Pwr3Br/3zgM4skZeNg3vbY92+dcVTs96f7fUvh7AYQ8FjiJBSTo8ARH5//PuDWgXPt2NXv8bsQkCHQUqqYCcKGdckncqtAqdbhbZ8Fg6jq+6FZrhfwWTEFRAAcFIVo7Qa8doUzX7LkWhKUAFIgpFIwzlGuXuGRzTl4kJJoMFMpgv0yTe5RHyZnJMZdgHQTTY6lkxszzOOJRRzRBMVcQFXuyOLr8gzimIeVTpD9QAoAAA`
 
 func TestDecompress(t *testing.T) {
-	data, err := base64.StdEncoding.DecodeString(xp1)
+	data, err := base64.StdEncoding.DecodeString(xp3)
 	if err != nil {
 		t.Fatalf("Failed to decode test data: %s\n", err)
 	}
@@ -144,8 +144,8 @@ func TestDecompress(t *testing.T) {
 	if len(data) < 4 {
 		t.Fatalf("Too short input\n")
 	}
-	infLen := (int(data[1]) << 8) | int(data[0])
-	defLen := (int(data[3]) << 8) | int(data[2])
+	infLen := ((int(data[1]) << 8) | int(data[0])) + 1
+	defLen := ((int(data[3]) << 8) | int(data[2])) + 1
 
 	var bytes []byte
 
