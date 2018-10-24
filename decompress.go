@@ -68,20 +68,12 @@ func (in *input) Avail() int {
 
 const huffmanTableLength = 32768
 
-func DecompressLZ77Huffman(data []byte) ([]byte, error) {
-	if len(data) < 4+256 {
-		return nil, errors.New("Invalid data")
-	}
-	inflatedLen := (int(data[1]) << 8) | int(data[0])
-	inflatedLen += 1
-	deflatedLen := (int(data[3]) << 8) | int(data[2])
-
-	if 4+deflatedLen > len(data) {
-		return nil, fmt.Errorf("Invalid data: %d vs. %d",
-			len(data), 4+deflatedLen)
+func DecompressLZ77Huffman(data []byte, out []byte) ([]byte, error) {
+	if len(data) < 256 {
+		return out, errors.New("Invalid data")
 	}
 
-	var symLen SymbolLength = data[4:260]
+	var symLen SymbolLength = data[0:256]
 	var currentTableEntry int
 	var decodingTable [huffmanTableLength]uint16
 
@@ -91,7 +83,7 @@ func DecompressLZ77Huffman(data []byte) ([]byte, error) {
 				entryCount := (1 << uint(15-bitLength))
 				for e := 0; e < entryCount; e++ {
 					if currentTableEntry >= huffmanTableLength {
-						return nil, fmt.Errorf("Invalid Huffman table")
+						return out, fmt.Errorf("Invalid Huffman table")
 					}
 					decodingTable[currentTableEntry] = uint16(symbol)
 					currentTableEntry++
@@ -100,23 +92,22 @@ func DecompressLZ77Huffman(data []byte) ([]byte, error) {
 		}
 	}
 	if currentTableEntry != huffmanTableLength {
-		return nil, errors.New("Huffman table underflow")
+		return out, errors.New("Huffman table underflow")
 	}
 
 	// Inflate data.
-	out := make([]byte, 0, len(data)*2)
 	in := &input{
 		input: data,
-		pos:   260,
+		pos:   256,
 	}
 	b, err := in.ReadUint16()
 	if err != nil {
-		return nil, err
+		return out, err
 	}
 	nextBits := uint32(b) << 16
 	b, err = in.ReadUint16()
 	if err != nil {
-		return nil, err
+		return out, err
 	}
 	nextBits |= uint32(b)
 	extraBits := 16
@@ -133,7 +124,7 @@ func DecompressLZ77Huffman(data []byte) ([]byte, error) {
 		if extraBits < 0 {
 			b, err := in.ReadUint16()
 			if err != nil {
-				return nil, err
+				return out, err
 			}
 			nextBits |= uint32(b) << uint(-extraBits)
 			extraBits += 16
@@ -149,17 +140,17 @@ func DecompressLZ77Huffman(data []byte) ([]byte, error) {
 			if matchLength == 15 {
 				b, err := in.ReadByte()
 				if err != nil {
-					return nil, err
+					return out, err
 				}
 				matchLength = uint16(b)
 				if matchLength == 255 {
 					b, err := in.ReadUint16()
 					if err != nil {
-						return nil, err
+						return out, err
 					}
 					matchLength = b
 					if matchLength < 15 {
-						return nil, errors.New("Invalid data")
+						return out, errors.New("Invalid data")
 					}
 					matchLength -= 15
 				}
@@ -173,7 +164,7 @@ func DecompressLZ77Huffman(data []byte) ([]byte, error) {
 			if extraBits < 0 {
 				b, err := in.ReadUint16()
 				if err != nil {
-					return nil, err
+					return out, err
 				}
 				nextBits |= uint32(b) << uint(-extraBits)
 				extraBits += 16
@@ -184,7 +175,6 @@ func DecompressLZ77Huffman(data []byte) ([]byte, error) {
 			}
 		}
 	}
-	return nil, fmt.Errorf("Decompress not implemented yet")
 }
 
 func DecompressLZ77(data []byte) ([]byte, error) {

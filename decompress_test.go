@@ -84,9 +84,9 @@ var lz77HuffmanInputs = [][]byte{
 	},
 }
 
-func testLZ77Huffman(t *testing.T) {
+func TestLZ77Huffman(t *testing.T) {
 	for _, data := range lz77HuffmanInputs {
-		bytes, err := DecompressLZ77Huffman(data)
+		bytes, err := DecompressLZ77Huffman(data, nil)
 		if err != nil {
 			t.Errorf("LZ77+Huffman failed: %s\n", err)
 			continue
@@ -134,16 +134,28 @@ var xp3 = `fQIlAoeHCAAAAAiAeIAAAAAIAAAIBgAAAAAAZnh3B4gAAHaFcHB3AGdwaHcHZwYHAICAA
 var xp4 = `9QTXApeYCQCQAAmQCQAAAAAJAAAIBgAAAAAAZWZmCJd4AIaVcHeXAHmQeIcHVweXAJCQAFB3V3hZiGZWB2ZlCHAJAAAAAAAAAAAAkAAAAAAAAAAAAJAAAACAAJAAAJAAAJAAkAAACAAAAAAAAAkAAAAAAACQAAAAkAAAkAAAAAAAAAAACZkAAAAJAAAAAAAAAAAAAHgAAAAAAAAAlwB4AAAAAABnB5cACQkAkHYIlgAJkAmQhpcHiZAJAGCGiACQAJgAcJcJgAAAmQiABwgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADqjdnMPD3R2N65ZV7Ps2bp6kY6+G5+Q/9OYlO/yV/w0Xfsv67Pr/Hipa1TU4k25jTQ1iRBtAIG4c/xQtCLTZYLzqgzU6JBDOuY5I0ziw95k6fUydwwe2VFkbNOgCMbRq7JCCXBmcMijIACHaCcgsS6WpiYrrLaNLJZvmWWJdds63Ed3LfqOE8u4pjwOiKvpzRphe2Ss65YIc1bBDuAshJmlaMa59qzdIpU1al2d42ACFlTohsw99FOuPRrjncb7JRdP64xBtz6yoDekakDyqZpZi1wkXt3JO3piPtPiRThd/sp2pohOI50HwObsB21su9QISwJ941OxphZBZGxItqhLya8MmP5rgObm6/72sR7/7xdno2S50PTuuOvgb70rYj+p/gU3Fi4Pwr3Br/3zgM4skZeNg3vbY92+dcVTs96f7fUvh7AYQ8FjiJBSTo8ARH5//PuDWgXPt2NXv8bsQkCHQUqqYCcKGdckncqtAqdbhbZ8Fg6jq+6FZrhfwWTEFRAAcFIVo7Qa8doUzX7LkWhKUAFIgpFIwzlGuXuGRzTl4kJJoMFMpgv0yTe5RHyZnJMZdgHQTTY6lkxszzOOJRRzRBMVcQFXuyOLr8gzimIeVTpD9QAoAAA`
 
 func TestDecompress(t *testing.T) {
-	bytes, err := base64.StdEncoding.DecodeString(xp1)
+	data, err := base64.StdEncoding.DecodeString(xp1)
 	if err != nil {
 		t.Fatalf("Failed to decode test data: %s\n", err)
 	}
 	if false {
-		fmt.Printf("Input data:\n%s", hex.Dump(bytes))
+		fmt.Printf("Input data:\n%s", hex.Dump(data))
 	}
-	data, err := DecompressLZ77Huffman(bytes)
-	if err != nil {
-		t.Fatalf("Decompress failed: %s\n", err)
+	if len(data) < 4 {
+		t.Fatalf("Too short input\n")
 	}
-	fmt.Printf("Decompressed data:\n%s", hex.Dump(data))
+	infLen := (int(data[1]) << 8) | int(data[0])
+	defLen := (int(data[3]) << 8) | int(data[2])
+
+	var bytes []byte
+
+	if infLen == defLen {
+		bytes = data[4:]
+	} else {
+		bytes, err = DecompressLZ77Huffman(data[4:], make([]byte, 0, infLen))
+		if err != nil {
+			t.Fatalf("Decompress failed: %s\n", err)
+		}
+	}
+	fmt.Printf("Decompressed data:\n%s", hex.Dump(bytes))
 }
