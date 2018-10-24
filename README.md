@@ -1,2 +1,2 @@
 # xpress
-Go implementation of the Microsoft xpress compression algorithm
+Go implementation of the Microsoft xpress compression algorithm.
